@@ -6,32 +6,49 @@ const level = require('level');
 const chainDB = './chaindata';
 const db = level(chainDB);
 
+// Key to store db length
+const DB_LENGTH_KEY = 'LENGTH';
+
+// Init database
+function initDB() {
+  return db.put(DB_LENGTH_KEY, 0);
+}
+
 // Add data to levelDB with key/value pair
-function addLevelDBData(key,value){
-  db.put(key, value, function(err) {
-    if (err) return console.log('Block ' + key + ' submission failed', err);
-  })
+function addLevelDBData(key, value) {
+  return db.batch()
+    .put(key, value)
+    .put(DB_LENGTH_KEY, Number(key) + 1)
+    .write();
 }
 
 // Get data from levelDB with key
-function getLevelDBData(key){
-  db.get(key, function(err, value) {
-    if (err) return console.log('Not found!', err);
-    console.log('Value = ' + value);
+function getLevelDBData(key) {
+  return db.get(key).catch(err => console.log(err));
+}
+
+// Get number of key in db
+function getDBLength() {
+  return new Promise(function(resolve, reject) {
+    db.get(DB_LENGTH_KEY)
+      .then(height => resolve(height))
+      .catch(err => {
+        if (err.notFound) {
+          resolve(0);
+        } else {
+          reject(err);
+        }
+      });
   })
 }
 
 // Add data to levelDB with value
-function addDataToLevelDB(value) {
-    let i = 0;
-    db.createReadStream().on('data', function(data) {
-          i++;
-        }).on('error', function(err) {
-            return console.log('Unable to read data stream!', err)
-        }).on('close', function() {
-          console.log('Block #' + i);
-          addLevelDBData(i, value);
-        });
+async function addDataToLevelDB(value) {
+  const height = await getDBLength().catch(error => {
+    console.log('Can not get db length', error);
+  });
+  console.log('Block #' + height);
+  return addLevelDBData(height, value);
 }
 
 /* ===== Testing ==============================================================|
@@ -46,9 +63,17 @@ function addDataToLevelDB(value) {
 |  ===========================================================================*/
 
 
-(function theLoop (i) {
-  setTimeout(function () {
-    addDataToLevelDB('Testing data');
-    if (--i) theLoop(i);
-  }, 100);
-})(10);
+// (function theLoop (i) {
+//   setTimeout(function () {
+//     addDataToLevelDB('Testing data');
+//     if (--i) theLoop(i);
+//   }, 100);
+// })(10);
+
+// Export db functions
+module.exports = {
+  initDB,
+  getDBLength,
+  getLevelDBData,
+  addDataToLevelDB,
+};
