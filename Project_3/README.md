@@ -1,55 +1,34 @@
-# Blockchain Data
+# RESTful web API with Node.js Framework
 
-Blockchain has the potential to change the way that the world approaches data. Develop Blockchain skills by understanding the data model behind Blockchain by developing your own simplified private blockchain.
+Building RESTful web API with Node.js framework that will interface with the private blockchain.
 
-## Getting Started
+### Web framework and endpoint
+* I chose Express.js for its simplicity and flexibility
+* Endpoints
+  1. GET `http://localhost:8000/block/{BLOCK_HEIGHT}`
+    Get block at block height
+  2. POST `http://localhost:8000/block` - with data: `{ body: BLOCK_BODY }` 
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+### Install and run app
 
-### Prerequisites
-
-Installing Node and NPM is pretty straightforward using the installer package available from the (Node.js® web site)[https://nodejs.org/en/].
-
-### Configuring your project
-
-- Use NPM to initialize your project and create package.json to store project dependencies.
 ```
-npm init
-```
-- Install crypto-js with --save flag to save dependency to our package.json file
-```
-npm install crypto-js --save
-```
-- Install level with --save flag
-```
-npm install level --save
+# Install npm packages
+npm install
+
+# Start server
+node app.js
 ```
 
-## Testing
+### Example
+```
+# Get block
+curl "http://localhost:8000/block/0"
 
-To test code:
-1: Open a command prompt or shell terminal after install node.js.
-2: Enter a node session, also known as REPL (Read-Evaluate-Print-Loop).
-```
-node
-```
-3: Import blockchain code
-```javascript
-const { Block, Blockchain } = require('./simpleChain');
-```
-4: Instantiate blockchain with blockchain variable
-```javascript
-const blockchain = new Blockchain();
-```
-5: Generate 10 test blocks
-```javascript
-blockchain.generateTestBlocks(10);
-```
-6: Validate blockchain
-```javascript
-blockchain.validateChain().then(result => console.log(result));
-```
-7: Get block height
-```javascript
-blockchain.getBlockHeight();
+# Create block
+curl -X "POST" "http://localhost:8000/block" \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "body": "Testing block with test string data"
+}'
+
 ```

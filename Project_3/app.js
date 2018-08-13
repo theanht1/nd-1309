@@ -10,7 +10,7 @@ const app = express();
 // Middleware to parse body
 app.use(bodyParser.json());
 
-/* Routes defination */
+/* Routes definition */
 // Get block at heighy
 app.get('/block/:blockHeight', async ({ params: { blockHeight } }, res) => {
   const block = await blockchain.getBlock(blockHeight);
@@ -28,7 +28,9 @@ app.post('/block', async ({ body: { body } }, res) => {
   }
   return res.json(newBlock);
 });
+/* End routes */
 
+// Start app
 app.listen(8000, () => {
   console.log('App listening on port 8000');
 });
