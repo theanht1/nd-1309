@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bitcoinMessage = require('bitcoinjs-message');
 
-const { addNonChainData, getLevelDBData } = require('./levelSandbox');
+const { addNonChainData, getLevelDBData, getDBLength } = require('./levelSandbox');
 const { Block, Blockchain } = require('./simpleChain.js');
 const VALIDATION_WINDOW = 300;
 
@@ -15,14 +15,6 @@ const app = express();
 app.use(bodyParser.json());
 
 /* Routes definition */
-// Get block at heighy
-app.get('/block/:blockHeight', async ({ params: { blockHeight } }, res) => {
-  const block = await blockchain.getBlock(blockHeight);
-  if (!block) {
-    return res.json({ error: 'Block not found' });
-  }
-  return res.json(block);
-});
 
 // Create new block
 app.post('/block', async ({
@@ -54,6 +46,7 @@ app.post('/block', async ({
   return res.json(newBlock);
 });
 
+// Request validation
 app.post('/requestValidation', async ({
   body: { address },
 }, res) => {
@@ -76,6 +69,7 @@ app.post('/requestValidation', async ({
   });
 });
 
+// Validate signature
 app.post('/message-signature/validate', async ({
   body: { address, signature },
 }, res) => {
@@ -138,6 +132,41 @@ app.post('/message-signature/validate', async ({
     },
   });
 });
+
+// Get list blocks of an address
+app.get('/stars/address::address', async ({ params: { address } }, res) => {
+  const nBlock = await getDBLength();
+  const blockList = [];
+  for (let i = 1; i < nBlock; i++) {
+    const block = await blockchain.getBlock(i);
+    if (block && block.body && block.body.address === address) {
+      blockList.push(block);
+    }
+  }
+  return res.status(200).json(blockList);
+});
+
+// Get block by hash
+app.get('/stars/hash::hash', async ({ params: { hash } }, res) => {
+  const nBlock = await getDBLength();
+  for (let i = 1; i < nBlock; i++) {
+    const block = await blockchain.getBlock(i);
+    if (block && block.hash === hash) {
+      return res.status(200).json(block);
+    }
+  }
+  return res.status(404).json({ error: 'Block not found' });
+});
+
+// Get block by height
+app.get('/block/:blockHeight', async ({ params: { blockHeight } }, res) => {
+  const block = await blockchain.getBlock(blockHeight);
+  if (!block) {
+    return res.json({ error: 'Block not found' });
+  }
+  return res.json(block);
+});
+
 /* End routes */
 
 // Start app
