@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const { Block, Blockchain } = require('./simpleChain.js');
+const VALIDATION_WINDOW = 300;
 
 // Init chain
 const blockchain = new Blockchain();
@@ -28,6 +29,21 @@ app.post('/block', async ({ body: { body } }, res) => {
   }
   return res.json(newBlock);
 });
+
+app.post('/requestValidation', async ({
+  body: { address },
+}, res) => {
+  const timeStamp = new Date().getTime();
+  const message =  `${address}:${timeStamp}:starRegistry`;
+
+  return res.status(200).json({
+    address,
+    requestTimeStamp: timeStamp,
+    message,
+    validationWindow: VALIDATION_WINDOW,
+  });
+});
+
 /* End routes */
 
 // Start app
