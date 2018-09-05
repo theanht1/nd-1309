@@ -51,6 +51,13 @@ async function addDataToLevelDB(value) {
   return addLevelDBData(height, value);
 }
 
+// Add other (not chain) data to levelDB
+function addNonChainData(key, value) {
+  return db.batch()
+    .put(key, value)
+    .write();
+}
+
 /* ===== Testing ==============================================================|
 |  - Self-invoking function to add blocks to chain                             |
 |  - Learn more:                                                               |
@@ -76,4 +83,5 @@ module.exports = {
   getDBLength,
   getLevelDBData,
   addDataToLevelDB,
+  addNonChainData,
 };

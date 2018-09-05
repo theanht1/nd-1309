@@ -1,5 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bitcoinMessage = require('bitcoinjs-message');
+
+const { addNonChainData, getLevelDBData } = require('./levelSandbox');
 const { Block, Blockchain } = require('./simpleChain.js');
 const VALIDATION_WINDOW = 300;
 
@@ -36,14 +39,77 @@ app.post('/requestValidation', async ({
   const timeStamp = new Date().getTime();
   const message =  `${address}:${timeStamp}:starRegistry`;
 
-  return res.status(200).json({
-    address,
+  const result = {
     requestTimeStamp: timeStamp,
     message,
     validationWindow: VALIDATION_WINDOW,
+  };
+
+  // Save message to db
+  await addNonChainData(address, JSON.stringify(result));
+
+  // Return result
+  return res.status(200).json({
+    ...result,
+    address,
   });
 });
 
+app.post('/message-signature/validate', async ({
+  body: { address, signature },
+}, res) => {
+  const {
+    message,
+    requestTimeStamp,
+    validationWindow,
+  } = JSON.parse(await getLevelDBData(address));
+
+  const currentTime = new Date().getTime();
+  const remainTime = requestTimeStamp + validationWindow * 1000 - currentTime;
+  const status = {
+    address,
+    validationWindow: Math.trunc(Math.max(remainTime, 0) / 1000),
+  };
+
+  // Return false if expired
+  if (remainTime < 0) {
+    return res.status(400).json({
+      registerStar: false,
+      status,
+    });
+  }
+
+  // Return false if signature validation failed
+  try {
+    if (!bitcoinMessage.verify(message, address, signature)) {
+      return res.status(400).json({
+        registerStar: false,
+        status: {
+          ...status,
+          messageSignature: 'invalid',
+        },
+      });
+    }
+  } catch (e) {
+    return res.status(400).json({
+      registerStar: false,
+      status: {
+        ...status,
+        messageSignature: 'invalid',
+      },
+    });
+  }
+
+  return res.status(200).json({
+    registerStar: true,
+    status: {
+      ...status,
+      requestTimeStamp,
+      message,
+      messageSignature: 'valid',
+    },
+  });
+});
 /* End routes */
 
 // Start app
