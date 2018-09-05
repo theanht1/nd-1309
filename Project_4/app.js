@@ -25,8 +25,29 @@ app.get('/block/:blockHeight', async ({ params: { blockHeight } }, res) => {
 });
 
 // Create new block
-app.post('/block', async ({ body: { body } }, res) => {
-  const newBlock = await blockchain.addBlock(new Block(body));
+app.post('/block', async ({
+  body: {
+    address,
+    star,
+  },
+}, res) => {
+  // Validate data
+  if (!address || !star || !star.ra || !star.dec || !star.story) {
+    return res.status(400).json({ error: 'Invalid information' })
+  }
+
+  // Check address validation
+  const { registerStar } = JSON.parse(await getLevelDBData(address));
+  if (!registerStar) {
+    return res.status(401).json({ error: 'Please request validation first' });
+  }
+
+  const { dec, ra, story, mag, con } = star;
+  const newBlock = await blockchain.addBlock(new Block({
+    address,
+    star: { dec, ra, story, mag, con }
+  }));
+
   if (!newBlock) {
     return res.json({ error: 'Block not created' });
   }
@@ -58,11 +79,12 @@ app.post('/requestValidation', async ({
 app.post('/message-signature/validate', async ({
   body: { address, signature },
 }, res) => {
+  const addressInfo = JSON.parse(await getLevelDBData(address));
   const {
     message,
     requestTimeStamp,
     validationWindow,
-  } = JSON.parse(await getLevelDBData(address));
+  } = addressInfo;
 
   const currentTime = new Date().getTime();
   const remainTime = requestTimeStamp + validationWindow * 1000 - currentTime;
@@ -99,6 +121,12 @@ app.post('/message-signature/validate', async ({
       },
     });
   }
+
+  // Mark as valid address
+  await addNonChainData(address, JSON.stringify({
+    ...addressInfo,
+    registerStar: true,
+  }));
 
   return res.status(200).json({
     registerStar: true,
