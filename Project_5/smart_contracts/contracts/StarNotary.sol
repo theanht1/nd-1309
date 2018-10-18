@@ -4,6 +4,10 @@ import 'openzeppelin-solidity/contracts/token/ERC721/ERC721.sol';
 
 contract StarNotary is ERC721 {
 
+    event NewStar(uint256 id, string name, string dec, string mag, string cent, string story);
+    event SaleStar(uint256 id, uint256 price);
+    event BuyStar(uint256 id, address old_owner, address new_owmer, uint256 price);
+
     struct Star {
         string name;
         string dec;
@@ -21,12 +25,13 @@ contract StarNotary is ERC721 {
     // Public methods
     //
     function createStar(string _name, string _dec, string _mag, string _cent, string _story) public {
-        require(checkIfStarExist(_dec, _mag, _cent));
+        require(!checkIfStarExist(_dec, _mag, _cent));
 
         Star memory newStar = Star(_name, _dec, _mag, _cent, _story);
         tokenIdToStarInfo[starId] = newStar;
 
         _mint(msg.sender, starId);
+        emit NewStar(starId, _name, _dec, _mag, _cent, _story);
         starId++;
     }
 
@@ -34,6 +39,7 @@ contract StarNotary is ERC721 {
         require(this.ownerOf(_tokenId) == msg.sender);
 
         starsForSale[_tokenId] = _price;
+        emit SaleStar(_tokenId, _price);
     }
 
     function buyStar(uint256 _tokenId) public payable {
@@ -51,6 +57,8 @@ contract StarNotary is ERC721 {
         if(msg.value > starCost) {
             msg.sender.transfer(msg.value - starCost);
         }
+
+        emit BuyStar(_tokenId, starOwner, msg.sender, starCost);
     }
 
     function checkIfStarExist(string _dec, string _mag, string _cent) public view returns(bool) {
@@ -64,12 +72,4 @@ contract StarNotary is ERC721 {
         }
         return false;
     }
-
-    // function starsForSale(uint _tokenId) public view returns(uint256) {
-    //     return starsForSale[_tokenId];
-    // }
-
-    // function tokenIdToStarInfo(uint256 _tokenId) public view returns(Star) {
-    //     return tokenIdToStarInfo[_tokenId];
-    // }
 }

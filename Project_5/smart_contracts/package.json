@@ -14,5 +14,8 @@
   "license": "ISC",
   "dependencies": {
     "openzeppelin-solidity": "2.0.0-rc.1"
+  },
+  "devDependencies": {
+    "solidity-coverage": "^0.5.11"
   }
 }
