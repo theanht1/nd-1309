@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import 'openzeppelin-solidity/contracts/token/ERC721/ERC721.sol';
 
@@ -6,17 +6,28 @@ contract StarNotary is ERC721 {
 
     struct Star {
         string name;
+        string dec;
+        string mag;
+        string cent;
+        string story;
     }
 
     mapping(uint256 => Star) public tokenIdToStarInfo;
     mapping(uint256 => uint256) public starsForSale;
 
-    function createStar(string _name, uint256 _tokenId) public {
-        Star memory newStar = Star(_name);
+    uint256 public starId;
 
-        tokenIdToStarInfo[_tokenId] = newStar;
+    //
+    // Public methods
+    //
+    function createStar(string _name, string _dec, string _mag, string _cent, string _story) public {
+        require(checkIfStarExist(_dec, _mag, _cent));
 
-        _mint(msg.sender, _tokenId);
+        Star memory newStar = Star(_name, _dec, _mag, _cent, _story);
+        tokenIdToStarInfo[starId] = newStar;
+
+        _mint(msg.sender, starId);
+        starId++;
     }
 
     function putStarUpForSale(uint256 _tokenId, uint256 _price) public {
@@ -41,4 +52,24 @@ contract StarNotary is ERC721 {
             msg.sender.transfer(msg.value - starCost);
         }
     }
+
+    function checkIfStarExist(string _dec, string _mag, string _cent) public view returns(bool) {
+        for (uint id = 0; id < starId; id++) {
+            Star memory star = tokenIdToStarInfo[id];
+            if (keccak256(abi.encodePacked(star.dec)) == keccak256(abi.encodePacked(_dec))
+                && keccak256(abi.encodePacked(star.mag)) == keccak256(abi.encodePacked(_mag))
+                && keccak256(abi.encodePacked(star.cent)) == keccak256(abi.encodePacked(_cent))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // function starsForSale(uint _tokenId) public view returns(uint256) {
+    //     return starsForSale[_tokenId];
+    // }
+
+    // function tokenIdToStarInfo(uint256 _tokenId) public view returns(Star) {
+    //     return tokenIdToStarInfo[_tokenId];
+    // }
 }
