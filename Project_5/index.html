@@ -204,7 +204,7 @@
             ];
             var StarNotary = web3.eth.contract(abi);
             // Grab the contract at specified deployed address with the interface defined by the ABI
-            var starNotary = StarNotary.at('0xb111ded3f2e4012c0b85d930fda298693d0da0b2');
+            var starNotary = StarNotary.at('0x7bbf6cf910827ca1ebf3a5e6952e94f9fb570864');
 
 
             // Enable claim button being clicked
@@ -214,7 +214,6 @@
                 var mag = $('#input-mag').val();
                 var cent = $('#input-cent').val();
                 var story = $('#input-story').val();
-                console.log(name, dec, mag, cent, story);
                 starNotary.createStar(name, dec, mag, cent, story, { from: defaultAccount }, function(error, result) {
                     if (error) {
                         return console.log(error);
@@ -229,7 +228,6 @@
                     if (error) {
                         return console.log(error);
                     }
-                    console.log(result);
                     $('#star-name').text(result[0]);
                     $('#star-dec').text(result[1]);
                     $('#star-mag').text(result[2]);
