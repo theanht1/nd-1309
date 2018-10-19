@@ -7,142 +7,233 @@
         <link rel="stylesheet" type="text/css" href="style.css">
 
         <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     </head>
 
     <body>
         <div class="container">
             <h1>Star Notary</h1>
 
-            <div class="row">
-                <label class="bold">Star Name:</label>
-                <label id="star-name"></label>
+            <div>
+                <h4>Create star</h4>
+                <div class="row">
+                    <label class="bold">Star Name:</label>
+                    <input type="text" id="input-name" placeholder="Enter star name">
+                </div>
+                <div class="row">
+                    <label class="bold">Star Dec:</label>
+                    <input type="text" id="input-dec" placeholder="Enter star dec">
+                </div>
+                <div class="row">
+                    <label class="bold">Star Mag:</label>
+                    <input type="text" id="input-mag" placeholder="Enter star mag">
+                </div>
+                <div class="row">
+                    <label class="bold">Star Cent:</label>
+                    <input type="text" id="input-cent" placeholder="Enter star cent">
+                </div>
+                <div class="row">
+                    <label class="bold">Star Story:</label>
+                    <input type="text" id="input-story" placeholder="Enter star story">
+                </div>
+                <button id="claim-button" onclick="claimStar()">Claim Star</button>
             </div>
 
-            <div class="row">
-                <label class="bold">Star Owner:</label>
-                <label id="star-owner"></label>
-            </div>
+            <div>
+                <h4>Show star info</h4>
 
-            <button id="claim-button" onclick="claimButtonClicked()">Claim Star</button>
+                <div class="row">
+                    <label class="bold">Star Id:</label>
+                    <input type="number" id="input-starId" placeholder="Enter star id">
+                    <button onclick="getStarInfo()">Claim Star</button>
+                </div>
+
+                <div class="row">
+                    <label class="bold">Name:</label>
+                    <label id="star-name"></label>
+                </div>
+                <div class="row">
+                    <label class="bold">Dec:</label>
+                    <label id="star-dec"></label>
+                </div>
+                <div class="row">
+                    <label class="bold">Mag:</label>
+                    <label id="star-mag"></label>
+                </div>
+                <div class="row">
+                    <label class="bold">Cent:</label>
+                    <label id="star-cent"></label>
+                </div>
+                <div class="row">
+                    <label class="bold">Story:</label>
+                    <label id="star-story"></label>
+                </div>
+            </div>
         </div>
 
-        <script>    
-         
-            if(typeof web3 != 'undefined') { 
-                web3 = new Web3(web3.currentProvider) // what Metamask injected 
+        <script>
+
+            if(typeof web3 != 'undefined') {
+                web3 = new Web3(web3.currentProvider) // what Metamask injected
             } else {
                 // Instantiate and set Ganache as your provider
                 web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
             }
 
-            // The default (top) wallet account from a list of test accounts 
-            web3.eth.defaultAccount = web3.eth.accounts[0];
+            // The default (top) wallet account from a list of test accounts
+            var defaultAccount = web3.eth.accounts[0];
 
-            // The interface definition for your smart contract (the ABI) 
-            var StarNotary = web3.eth.contract(
-                [
-                    {
-                        "constant": false,
-                        "inputs": [],
-                        "name": "claimStar",
-                        "outputs": [],
-                        "payable": false,
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    },
-                    {
-                        "anonymous": false,
-                        "inputs": [
-                            {
-                                "indexed": false,
-                                "name": "owner",
-                                "type": "address"
-                            }
-                        ],
-                        "name": "starClaimed",
-                        "type": "event"
-                    },
-                    {
-                        "inputs": [],
-                        "payable": false,
-                        "stateMutability": "nonpayable",
-                        "type": "constructor"
-                    },
-                    {
-                        "constant": true,
-                        "inputs": [],
-                        "name": "starName",
-                        "outputs": [
-                            {
-                                "name": "",
-                                "type": "string"
-                            }
-                        ],
-                        "payable": false,
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "constant": true,
-                        "inputs": [],
-                        "name": "starOwner",
-                        "outputs": [
-                            {
-                                "name": "",
-                                "type": "address"
-                            }
-                        ],
-                        "payable": false,
-                        "stateMutability": "view",
-                        "type": "function"
-                    }
-                ]
-            );
+            // The interface definition for your smart contract (the ABI)
+            var abi = [
+              {
+                "constant": true,
+                "inputs": [
+                  {
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "starsForSale",
+                "outputs": [
+                  {
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+              },
+              {
+                "constant": false,
+                "inputs": [
+                  {
+                    "name": "_name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "_dec",
+                    "type": "string"
+                  },
+                  {
+                    "name": "_mag",
+                    "type": "string"
+                  },
+                  {
+                    "name": "_cent",
+                    "type": "string"
+                  },
+                  {
+                    "name": "_story",
+                    "type": "string"
+                  }
+                ],
+                "name": "createStar",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              {
+                "constant": false,
+                "inputs": [
+                  {
+                    "name": "_tokenId",
+                    "type": "uint256"
+                  },
+                  {
+                    "name": "_price",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "putStarUpForSale",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+              },
+              {
+                "constant": false,
+                "inputs": [
+                  {
+                    "name": "_tokenId",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "buyStar",
+                "outputs": [],
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "function"
+              },
+              {
+                "constant": true,
+                "inputs": [
+                  {
+                    "name": "",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "tokenIdToStarInfo",
+                "outputs": [
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "dec",
+                    "type": "string"
+                  },
+                  {
+                    "name": "mag",
+                    "type": "string"
+                  },
+                  {
+                    "name": "cent",
+                    "type": "string"
+                  },
+                  {
+                    "name": "story",
+                    "type": "string"
+                  }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+              },
+            ];
+            var StarNotary = web3.eth.contract(abi);
             // Grab the contract at specified deployed address with the interface defined by the ABI
-            var starNotary = StarNotary.at('0x8040086095e9bc41535094bf03eae1f6178b5260');
-            
-            // Get and display star name
-            starNotary.starName(function (error, result) {
-                if (!error) {
-                    document.getElementById('star-name').innerText = result
-                } else { 
-                    console.log(error);
-                }
-            });
+            var starNotary = StarNotary.at('0x7bbf6cf910827ca1ebf3a5e6952e94f9fb570864');
 
-            // Get and display star owner
-            starNotary.starOwner(function (error, result) {
-                if (!error) {
-                    document.getElementById('star-owner').innerText = result
-                } else { 
-                    console.log(error);
-                }
-            });
 
             // Enable claim button being clicked
-            function claimButtonClicked() { 
-                web3.eth.getAccounts(function(error, accounts) { 
-                    if (error) { 
-                        console.log(error)
-                        return
+            function claimStar() {
+                var name = $('#input-name').val();
+                var dec = $('#input-dec').val();
+                var mag = $('#input-mag').val();
+                var cent = $('#input-cent').val();
+                var story = $('#input-story').val();
+                starNotary.createStar(name, dec, mag, cent, story, { from: defaultAccount }, function(error, result) {
+                    if (error) {
+                        return console.log(error);
                     }
-                    var account = accounts[0]
-                    starNotary.claimStar(function (error, result) {
-                        if (!error) {
-                            var starClaimedEvent = starNotary.starClaimed({from: account});
-                            starClaimedEvent.watch(function(error, result) {
-                                if (!error) {
-                                    location.reload();
-                                } else {
-                                    console.log('watching for star claimed event is failing');
-                                }
-                            });
-                        } else { 
-                            console.log(error);
-                        }
-                    });
-                   
-                })
+                });
+            }
+
+            // Get star information
+            function getStarInfo() {
+                var starId = $('#input-starId').val();
+                starNotary.tokenIdToStarInfo(starId, function(error, result) {
+                    if (error) {
+                        return console.log(error);
+                    }
+                    $('#star-name').text(result[0]);
+                    $('#star-dec').text(result[1]);
+                    $('#star-mag').text(result[2]);
+                    $('#star-cent').text(result[3]);
+                    $('#star-story').text(result[4]);
+                });
             }
         </script>
     </body>
